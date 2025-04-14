@@ -56,7 +56,7 @@ const Login = () => {
             <div className="inline-block p-3 mb-4 rounded-full bg-pink-100">
               <Heart className="w-10 h-10 text-cute-pink" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Meet Request Portal</h1>
+            <h1 className="text-2xl font-bold text-foreground">Viswanathan's Official Meet Request Portal</h1>
             <p className="mt-2 text-muted-foreground">Enter your secret code to continue</p>
           </div>
           
