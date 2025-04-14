@@ -25,7 +25,7 @@ const NewRequest = () => {
     wished_date: "",
     wished_urgency: "medium" as "low" | "medium" | "high",
     reason: "",
-    person: "her" 
+    person: "Smrthi" 
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -193,7 +193,7 @@ const NewRequest = () => {
                   <SelectValue placeholder="Select person" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="her">Smrthi</SelectItem>
+                  <SelectItem value="Smrthi">Smrthi</SelectItem>
                 </SelectContent>
               </Select>
             </div>
