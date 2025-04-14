@@ -1,14 +1,16 @@
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Heart, KeyRound } from "lucide-react";
+import LoadingScreen from "@/components/LoadingScreen";
 
 const Login = () => {
   const [code, setCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { user, login, loading } = useAuth();
 
   const handleSubmit = async (e: FormEvent) => {
@@ -16,22 +18,34 @@ const Login = () => {
     if (!code) return;
     
     setIsSubmitting(true);
+    setIsLoading(true);
+    
     try {
-      await login(code);
+      // Wait for 3 seconds to show the loading animation
+      setTimeout(async () => {
+        await login(code);
+        setIsLoading(false);
+      }, 3000);
     } catch (error) {
       console.error("Login error:", error);
+      setIsLoading(false);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   // If user is already logged in, redirect to the appropriate dashboard
-  if (user && !loading) {
+  if (user && !loading && !isLoading) {
     if (user.type === "approver") {
       return <Navigate to="/approve" replace />;
     } else {
       return <Navigate to="/dashboard" replace />;
     }
+  }
+
+  // Show loading screen during the 3-second animation
+  if (isLoading) {
+    return <LoadingScreen />;
   }
 
   return (
@@ -42,7 +56,7 @@ const Login = () => {
             <div className="inline-block p-3 mb-4 rounded-full bg-pink-100">
               <Heart className="w-10 h-10 text-cute-pink" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Love Request Portal</h1>
+            <h1 className="text-2xl font-bold text-foreground">Meet Request Portal</h1>
             <p className="mt-2 text-muted-foreground">Enter your secret code to continue</p>
           </div>
           
@@ -68,9 +82,7 @@ const Login = () => {
             </Button>
             
             <div className="text-xs text-center text-muted-foreground mt-4">
-              <p>Access Codes:</p>
-              <p>"manjot" for requester view</p>
-              <p>"monkeyman" for approver view</p>
+              <p>Access codes will be shared personally.</p>
             </div>
           </form>
         </div>
