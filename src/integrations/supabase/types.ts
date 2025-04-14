@@ -33,6 +33,69 @@ export type Database = {
         }
         Relationships: []
       }
+      requests: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          person: string
+          phone: string | null
+          reason: string
+          response_reason: string | null
+          status: string
+          wished_date: string
+          wished_urgency: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          person: string
+          phone?: string | null
+          reason: string
+          response_reason?: string | null
+          status?: string
+          wished_date: string
+          wished_urgency: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          person?: string
+          phone?: string | null
+          reason?: string
+          response_reason?: string | null
+          status?: string
+          wished_date?: string
+          wished_urgency?: string
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          code: string
+          created_at: string | null
+          name: string | null
+          phone: string | null
+          type: string
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          name?: string | null
+          phone?: string | null
+          type: string
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          name?: string | null
+          phone?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
