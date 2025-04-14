@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -61,66 +60,16 @@ const RequestStatus = () => {
       
       console.log(`Found ${allRequestsResult.data?.length || 0} total requests in database`);
 
-      // IMPORTANT CHANGE: Display all requests or filter by phone if user has one
-      if (showAllRequests) {
-        console.log("Debug mode: showing all requests regardless of phone number");
-        
-        // Type cast the data to ensure wished_urgency, person, and status are correctly typed
-        const typedData = (allRequestsResult.data || []).map(item => ({
-          ...item,
-          wished_urgency: item.wished_urgency as "low" | "medium" | "high",
-          person: item.person as "dad" | "mom" | "sister" | "her",
-          status: item.status as "pending" | "approved" | "rejected"
-        }));
-        
-        setRequests(typedData);
-        console.log("Setting all requests:", typedData);
-      } 
-      // This is the original filtering logic by phone number
-      else if (user && user.phone) {
-        const { data, error } = await supabase
-          .from("requests")
-          .select("*")
-          .eq("phone", user.phone);
-          
-        if (error) {
-          console.error("Supabase error fetching user requests:", error);
-          toast({
-            title: "Error fetching your requests",
-            description: "Could not retrieve your requests. Please try again.",
-            variant: "destructive",
-          });
-          setRequests([]);
-        } else {
-          console.log("User-specific requests from Supabase:", data);
-          
-          // Type cast the data
-          const typedData = (data || []).map(item => ({
-            ...item,
-            wished_urgency: item.wished_urgency as "low" | "medium" | "high",
-            person: item.person as "dad" | "mom" | "sister" | "her",
-            status: item.status as "pending" | "approved" | "rejected"
-          }));
-          
-          setRequests(typedData);
-        }
-      } else {
-        console.log("User has no phone number set in profile", user);
-        toast({
-          title: "Note",
-          description: "Showing all requests because your phone is not set.",
-        });
-        
-        // In this case, also show all requests
-        const typedData = (allRequestsResult.data || []).map(item => ({
-          ...item,
-          wished_urgency: item.wished_urgency as "low" | "medium" | "high",
-          person: item.person as "dad" | "mom" | "sister" | "her",
-          status: item.status as "pending" | "approved" | "rejected"
-        }));
-        
-        setRequests(typedData);
-      }
+      // Type cast the data to ensure wished_urgency, person, and status are correctly typed
+      const typedData = (allRequestsResult.data || []).map(item => ({
+        ...item,
+        wished_urgency: item.wished_urgency as "low" | "medium" | "high",
+        person: item.person as "dad" | "mom" | "sister" | "her",
+        status: item.status as "pending" | "approved" | "rejected"
+      }));
+      
+      setRequests(typedData);
+      console.log("Setting all requests:", typedData);
     } catch (error) {
       console.error("Unexpected error fetching requests:", error);
       toast({
@@ -212,7 +161,6 @@ const RequestStatus = () => {
       
       const testData = {
         name: "Test User",
-        phone: user?.phone || null, // Use user's phone if available, otherwise null
         wished_date: new Date().toISOString().split('T')[0],
         wished_urgency: "medium" as "low" | "medium" | "high",
         reason: "This is a test request",

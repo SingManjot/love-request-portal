@@ -64,14 +64,10 @@ const NewRequest = () => {
     
     try {
       console.log("Current user:", user);
-      console.log("User phone:", user.phone);
       console.log("Form data:", formData);
       
-      // For this application, we'll allow requests without a phone number
-      // to make testing easier
       const requestData = {
         ...formData,
-        phone: user.phone || null,  // Allow null phone
         status: "pending" as "pending" | "approved" | "rejected"
       };
       
