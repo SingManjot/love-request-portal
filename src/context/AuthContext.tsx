@@ -77,16 +77,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (createError) throw createError;
         
-        setUser(newUser);
-        localStorage.setItem("user", JSON.stringify(newUser));
+        // Convert the database type to our application type
+        const typedUser: User = {
+          code: newUser.code,
+          type: newUser.type as "requester" | "approver",
+          name: newUser.name || undefined,
+          created_at: newUser.created_at || undefined,
+          phone: newUser.phone || undefined
+        };
+        
+        setUser(typedUser);
+        localStorage.setItem("user", JSON.stringify(typedUser));
         toast({
           title: "Welcome!",
           description: userType === "requester" ? "You can now create requests." : "You can now review requests.",
         });
       } else {
-        // Existing user
-        setUser(data);
-        localStorage.setItem("user", JSON.stringify(data));
+        // Existing user - ensure type safety
+        const typedUser: User = {
+          code: data.code,
+          type: data.type as "requester" | "approver",
+          name: data.name || undefined,
+          created_at: data.created_at || undefined,
+          phone: data.phone || undefined
+        };
+        
+        setUser(typedUser);
+        localStorage.setItem("user", JSON.stringify(typedUser));
         toast({
           title: "Welcome back!",
           description: "You've been logged in successfully.",
