@@ -1,6 +1,7 @@
+
 import { useEffect, useState, FormEvent } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { Request } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -116,6 +117,33 @@ const ApproverDashboard = () => {
         delete newInputs[id];
         return newInputs;
       });
+
+      // Update local state immediately to reflect the change
+      // Find the request that was just processed
+      const updatedRequest = requests.find(req => req.id === id);
+      if (updatedRequest) {
+        // Create an updated version of the request with the new status
+        const processedRequest = {
+          ...updatedRequest,
+          status,
+          response_reason: reason
+        };
+
+        // Update all three state variables
+        setRequests(prev => 
+          prev.map(req => req.id === id ? processedRequest : req)
+        );
+        
+        // Remove from pending requests
+        setPendingRequests(prev => 
+          prev.filter(req => req.id !== id)
+        );
+        
+        // Add to processed requests
+        setProcessedRequests(prev => 
+          [processedRequest, ...prev]
+        );
+      }
       
     } catch (error) {
       console.error(`Error ${status} request:`, error);
