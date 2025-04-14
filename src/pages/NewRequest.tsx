@@ -1,4 +1,3 @@
-
 import { useState, FormEvent, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -68,24 +67,12 @@ const NewRequest = () => {
       console.log("User phone:", user.phone);
       console.log("Form data:", formData);
       
-      // Check if user has phone number
-      if (!user.phone) {
-        console.log("No phone number found in user profile");
-        toast({
-          title: "Profile incomplete",
-          description: "Your phone number is not set. Using a placeholder for testing.",
-          variant: "destructive",
-        });
-        
-        // For debugging purposes, we'll use a placeholder phone number
-        // In a real app, you'd want to update the user profile instead
-        await updateUserWithPhone();
-      }
-      
+      // For this application, we'll allow requests without a phone number
+      // to make testing easier
       const requestData = {
         ...formData,
-        phone: user.phone || "test-phone-" + Date.now(), // Use placeholder if no phone
-        status: "pending" // Explicitly set status
+        phone: user.phone || null,  // Allow null phone
+        status: "pending" as "pending" | "approved" | "rejected"
       };
       
       console.log("Final request data being sent:", requestData);
@@ -107,7 +94,7 @@ const NewRequest = () => {
         description: "Your request has been sent successfully.",
       });
       
-      // Navigate after a delay to ensure Supabase has time to process
+      // Navigate after a longer delay to ensure Supabase has time to process
       setTimeout(() => {
         console.log("Navigating to request-status page");
         toast({
@@ -115,7 +102,7 @@ const NewRequest = () => {
           description: "Taking you to your request status page.",
         });
         navigate("/request-status");
-      }, 2000);
+      }, 3000); // Extended to 3 seconds
     } catch (error) {
       console.error("Error submitting request:", error);
       toast({
@@ -125,33 +112,6 @@ const NewRequest = () => {
       });
     } finally {
       setIsSubmitting(false);
-    }
-  };
-  
-  // Helper function to update user with a phone number if missing
-  const updateUserWithPhone = async () => {
-    if (!user) return;
-    
-    const tempPhone = "test-phone-" + Date.now();
-    
-    try {
-      const { error } = await supabase
-        .from("users")
-        .update({ phone: tempPhone })
-        .eq("code", user.code);
-        
-      if (error) {
-        console.error("Error updating user phone:", error);
-        return;
-      }
-      
-      // Update local user object
-      user.phone = tempPhone;
-      localStorage.setItem("user", JSON.stringify(user));
-      
-      console.log("Updated user with temporary phone:", tempPhone);
-    } catch (error) {
-      console.error("Error in updateUserWithPhone:", error);
     }
   };
 

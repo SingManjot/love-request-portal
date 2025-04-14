@@ -28,21 +28,18 @@ const RequestStatus = () => {
   const { toast } = useToast();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [debug, setDebug] = useState<any>(null);
+  const [showAllRequests, setShowAllRequests] = useState(true); // For debugging - show all requests
 
   const fetchRequests = async () => {
-    if (!user) {
-      console.log("No user found, cannot fetch requests");
-      setLoading(false);
-      return;
-    }
-    
     setLoading(true);
     
     try {
       console.log("Current user:", user);
-      console.log("Fetching requests for phone:", user.phone);
+      if (user) {
+        console.log("User phone:", user.phone || "Not set");
+      }
       
-      // Debug: Fetch ALL requests to understand what's in the database
+      // Always fetch ALL requests for debugging
       const allRequestsResult = await supabase
         .from("requests")
         .select("*");
@@ -57,27 +54,19 @@ const RequestStatus = () => {
           description: "Could not access the requests database. Please try again.",
           variant: "destructive",
         });
-      } else {
-        console.log(`Found ${allRequestsResult.data?.length || 0} total requests in database`);
+        setRequests([]);
+        setLoading(false);
+        return;
       }
       
-      // Now fetch user-specific requests if the user has a phone number
-      if (user.phone) {
-        const { data, error } = await supabase
-          .from("requests")
-          .select("*")
-          .eq("phone", user.phone);
-          
-        if (error) {
-          console.error("Supabase error:", error);
-          throw error;
-        }
-        
-        console.log("User-specific requests from Supabase:", data);
-        console.log("Number of user requests found:", data?.length || 0);
+      console.log(`Found ${allRequestsResult.data?.length || 0} total requests in database`);
+
+      // IMPORTANT CHANGE: Display all requests or filter by phone if user has one
+      if (showAllRequests) {
+        console.log("Debug mode: showing all requests regardless of phone number");
         
         // Type cast the data to ensure wished_urgency, person, and status are correctly typed
-        const typedData = (data || []).map(item => ({
+        const typedData = (allRequestsResult.data || []).map(item => ({
           ...item,
           wished_urgency: item.wished_urgency as "low" | "medium" | "high",
           person: item.person as "dad" | "mom" | "sister" | "her",
@@ -85,19 +74,58 @@ const RequestStatus = () => {
         }));
         
         setRequests(typedData);
+        console.log("Setting all requests:", typedData);
+      } 
+      // This is the original filtering logic by phone number
+      else if (user && user.phone) {
+        const { data, error } = await supabase
+          .from("requests")
+          .select("*")
+          .eq("phone", user.phone);
+          
+        if (error) {
+          console.error("Supabase error fetching user requests:", error);
+          toast({
+            title: "Error fetching your requests",
+            description: "Could not retrieve your requests. Please try again.",
+            variant: "destructive",
+          });
+          setRequests([]);
+        } else {
+          console.log("User-specific requests from Supabase:", data);
+          
+          // Type cast the data
+          const typedData = (data || []).map(item => ({
+            ...item,
+            wished_urgency: item.wished_urgency as "low" | "medium" | "high",
+            person: item.person as "dad" | "mom" | "sister" | "her",
+            status: item.status as "pending" | "approved" | "rejected"
+          }));
+          
+          setRequests(typedData);
+        }
       } else {
         console.log("User has no phone number set in profile", user);
         toast({
-          title: "Profile incomplete",
-          description: "Your phone number is not set up. Please update your profile.",
-          variant: "destructive",
+          title: "Note",
+          description: "Showing all requests because your phone is not set.",
         });
+        
+        // In this case, also show all requests
+        const typedData = (allRequestsResult.data || []).map(item => ({
+          ...item,
+          wished_urgency: item.wished_urgency as "low" | "medium" | "high",
+          person: item.person as "dad" | "mom" | "sister" | "her",
+          status: item.status as "pending" | "approved" | "rejected"
+        }));
+        
+        setRequests(typedData);
       }
     } catch (error) {
-      console.error("Error fetching requests:", error);
+      console.error("Unexpected error fetching requests:", error);
       toast({
         title: "Error fetching requests",
-        description: "Could not retrieve your requests. Please try again.",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
       setRequests([]);
@@ -108,34 +136,31 @@ const RequestStatus = () => {
   
   useEffect(() => {
     console.log("RequestStatus component mounted, user:", user);
+    fetchRequests();
     
-    if (user) {
-      fetchRequests();
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('requests-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'requests',
+        },
+        (payload) => {
+          console.log("Real-time update received:", payload);
+          fetchRequests();
+        }
+      )
+      .subscribe();
       
-      // Set up real-time subscription
-      const channel = supabase
-        .channel('requests-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'requests',
-          },
-          (payload) => {
-            console.log("Real-time update received:", payload);
-            fetchRequests();
-          }
-        )
-        .subscribe();
-        
-      console.log("Subscription created to requests table");
-        
-      return () => {
-        console.log("Cleaning up subscription");
-        channel.unsubscribe();
-      };
-    }
+    console.log("Subscription created to requests table");
+      
+    return () => {
+      console.log("Cleaning up subscription");
+      channel.unsubscribe();
+    };
   }, [user, refreshTrigger]);
 
   const getStatusBadge = (status: string) => {
@@ -182,21 +207,12 @@ const RequestStatus = () => {
 
   // Function to manually insert a test request for debugging
   const createTestRequest = async () => {
-    if (!user || !user.phone) {
-      toast({
-        title: "Error",
-        description: "You must be logged in with a phone number to create a test request.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     try {
       setLoading(true);
       
       const testData = {
         name: "Test User",
-        phone: user.phone,
+        phone: user?.phone || null, // Use user's phone if available, otherwise null
         wished_date: new Date().toISOString().split('T')[0],
         wished_urgency: "medium" as "low" | "medium" | "high",
         reason: "This is a test request",
@@ -237,6 +253,14 @@ const RequestStatus = () => {
     }
   };
 
+  // Toggle to show all requests or only user's requests
+  const toggleShowAll = () => {
+    setShowAllRequests(prev => !prev);
+    setTimeout(() => {
+      fetchRequests();
+    }, 100);
+  };
+
   return (
     <div className="min-h-screen bg-background heart-bg">
       <div className="container max-w-md mx-auto py-8 px-4">
@@ -266,8 +290,8 @@ const RequestStatus = () => {
           </Button>
         </div>
         
-        {/* Add Debug Test Button */}
-        <div className="mb-4">
+        {/* Debug Tools */}
+        <div className="space-y-2 mb-4">
           <Button
             variant="secondary"
             size="sm"
@@ -278,6 +302,16 @@ const RequestStatus = () => {
             <Database className="w-4 h-4 mr-2" />
             Create Test Request
           </Button>
+          
+          <Button
+            variant={showAllRequests ? "default" : "outline"}
+            size="sm"
+            onClick={toggleShowAll}
+            disabled={loading}
+            className="w-full"
+          >
+            {showAllRequests ? "Currently Showing All Requests" : "Show All Requests"}
+          </Button>
         </div>
         
         {/* Debug Info */}
@@ -286,6 +320,7 @@ const RequestStatus = () => {
             <h3 className="font-bold mb-1">Debug Info</h3>
             <p>Total requests in DB: {debug.data?.length || 0}</p>
             <p>User phone: {user?.phone || "Not set"}</p>
+            <p>Show all mode: {showAllRequests ? "ON" : "OFF"}</p>
             <p>First request in DB (if any): {debug.data && debug.data.length > 0 ? 
               `Name: ${debug.data[0].name}, Phone: ${debug.data[0].phone}` : 
               "No requests found"}</p>
@@ -325,7 +360,7 @@ const RequestStatus = () => {
         ) : (
           <div className="space-y-4">
             {requests.map((request) => (
-              <Card key={request.id} className="cute-card overflow-hidden">
+              <Card key={request.id} className="cute-card overflow-hidden p-4">
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-semibold">{request.name}</h3>
                   {getStatusBadge(request.status)}

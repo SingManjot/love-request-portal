@@ -19,20 +19,20 @@ export interface Database {
 export interface Request {
   id: string;
   name: string;
-  phone: string;
+  phone: string | null; // Changed to allow null
   wished_date: string;
   wished_urgency: "low" | "medium" | "high";
   reason: string;
   person: "dad" | "mom" | "sister" | "her";
   status: "pending" | "approved" | "rejected";
-  response_reason?: string;
-  created_at: string;
+  response_reason?: string | null;
+  created_at: string | null;
 }
 
 export interface User {
   code: string;
   type: "requester" | "approver";
-  name?: string;
-  created_at?: string;
-  phone?: string;
+  name?: string | null;
+  created_at?: string | null;
+  phone?: string | null;
 }
