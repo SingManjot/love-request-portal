@@ -194,7 +194,7 @@ const ApproverDashboard = () => {
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
             <Heart className="w-6 h-6 text-cute-pink" />
-            <h1 className="text-xl font-bold">Love Requests</h1>
+            <h1 className="text-xl font-bold">Meet Requests</h1>
           </div>
           <Button
             variant="outline"
