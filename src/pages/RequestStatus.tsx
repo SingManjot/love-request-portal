@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -11,7 +12,8 @@ import {
   CheckCircle, 
   XCircle,
   Calendar,
-  Heart
+  Heart,
+  RefreshCw
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,32 +25,49 @@ const RequestStatus = () => {
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const fetchRequests = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log("No user found, cannot fetch requests");
+      setLoading(false);
+      return;
+    }
+    
+    setLoading(true);
     
     try {
       console.log("Fetching requests for phone:", user.phone);
+      
+      // Fetch ALL requests to debug
+      const allRequestsResult = await supabase
+        .from("requests")
+        .select("*");
+        
+      console.log("All requests in database:", allRequestsResult);
+      
+      // Now fetch user-specific requests
       const { data, error } = await supabase
         .from("requests")
         .select("*")
-        .eq("phone", user.phone)
-        .order("created_at", { ascending: false });
+        .eq("phone", user.phone);
         
       if (error) {
         console.error("Supabase error:", error);
         throw error;
       }
       
-      if (!data) {
-        console.log("No data returned from query");
+      console.log("Raw data from Supabase for this user:", data);
+      console.log("User phone used for query:", user.phone);
+      
+      if (!data || data.length === 0) {
+        console.log("No requests found for this user");
         setRequests([]);
+        setLoading(false);
         return;
       }
       
-      console.log("Raw data from Supabase:", data);
-      
-      // Type cast the data to ensure wished_urgency is correctly typed
+      // Type cast the data to ensure wished_urgency, person, and status are correctly typed
       const typedData = data.map(item => ({
         ...item,
         wished_urgency: item.wished_urgency as "low" | "medium" | "high",
@@ -57,6 +76,8 @@ const RequestStatus = () => {
       }));
       
       console.log("Processed requests:", typedData);
+      console.log("Number of requests found:", typedData.length);
+      
       setRequests(typedData);
     } catch (error) {
       console.error("Error fetching requests:", error);
@@ -78,15 +99,14 @@ const RequestStatus = () => {
       fetchRequests();
       
       // Set up real-time subscription
-      const subscription = supabase
-        .channel("requests-changes")
+      const channel = supabase
+        .channel('requests-changes')
         .on(
-          "postgres_changes",
+          'postgres_changes',
           {
-            event: "*",
-            schema: "public",
-            table: "requests",
-            filter: `phone=eq.${user.phone}`,
+            event: '*',
+            schema: 'public',
+            table: 'requests',
           },
           (payload) => {
             console.log("Real-time update received:", payload);
@@ -95,14 +115,14 @@ const RequestStatus = () => {
         )
         .subscribe();
         
-      console.log("Subscription created:", subscription);
+      console.log("Subscription created to requests table");
         
       return () => {
         console.log("Cleaning up subscription");
-        subscription.unsubscribe();
+        channel.unsubscribe();
       };
     }
-  }, [user]);
+  }, [user, refreshTrigger]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -142,8 +162,8 @@ const RequestStatus = () => {
   };
 
   const handleRefresh = () => {
-    setLoading(true);
-    fetchRequests();
+    console.log("Manual refresh triggered");
+    setRefreshTrigger(prev => prev + 1);
   };
 
   return (
@@ -170,6 +190,7 @@ const RequestStatus = () => {
             onClick={handleRefresh}
             disabled={loading}
           >
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
         </div>
@@ -200,6 +221,9 @@ const RequestStatus = () => {
             >
               Create Your First Request
             </Button>
+            <div className="mt-4 text-sm text-muted-foreground">
+              <p>If you've already created a request and don't see it here, try refreshing.</p>
+            </div>
           </div>
         ) : (
           <div className="space-y-4">

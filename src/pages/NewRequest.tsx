@@ -43,6 +43,7 @@ const NewRequest = () => {
     e.preventDefault();
     
     if (!user) {
+      console.log("No user found, cannot submit request");
       toast({
         title: "Authentication error",
         description: "You must be logged in to submit a request.",
@@ -54,12 +55,14 @@ const NewRequest = () => {
     setIsSubmitting(true);
     
     try {
+      console.log("Current user:", user);
       console.log("Submitting request with phone:", user.phone);
       console.log("Form data:", formData);
       
       const requestData = {
         ...formData,
         phone: user.phone,
+        status: "pending" // Explicitly set status to ensure it's always included
       };
       
       console.log("Final request data being sent:", requestData);
@@ -81,10 +84,12 @@ const NewRequest = () => {
         description: "Your request has been sent successfully.",
       });
       
-      // Introduce a small delay before navigation to ensure Supabase has time to process
+      // Introduce a longer delay before navigation to ensure Supabase has time to process
+      // and the subscription in RequestStatus has time to receive the update
       setTimeout(() => {
+        console.log("Navigating to request-status page");
         navigate("/request-status");
-      }, 500);
+      }, 1500);
     } catch (error) {
       console.error("Error submitting request:", error);
       toast({
