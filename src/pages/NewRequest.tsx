@@ -194,9 +194,6 @@ const NewRequest = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="her">Her</SelectItem>
-                  <SelectItem value="mom">Her Mom</SelectItem>
-                  <SelectItem value="dad">Her Dad</SelectItem>
-                  <SelectItem value="sister">Her Sister</SelectItem>
                 </SelectContent>
               </Select>
             </div>
