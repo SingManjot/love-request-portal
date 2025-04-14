@@ -25,7 +25,7 @@ const NewRequest = () => {
     wished_date: "",
     wished_urgency: "medium" as "low" | "medium" | "high",
     reason: "",
-    person: "her" as "dad" | "mom" | "sister" | "her"
+    person: "her" 
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
