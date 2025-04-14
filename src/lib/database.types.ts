@@ -3,9 +3,9 @@ export interface Request {
   id: string;
   name: string;
   wished_date: string;
-  wished_urgency: "low" | "medium" | "high";
+  wished_urgency: string; // Changed from "low" | "medium" | "high" to string to match database
   reason: string;
-  person: "dad" | "mom" | "sister" | "her";
+  person: string;
   status: "pending" | "approved" | "rejected";
   response_reason?: string | null;
   created_at: string | null;

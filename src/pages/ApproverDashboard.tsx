@@ -44,9 +44,11 @@ const ApproverDashboard = () => {
         
         console.log("Fetched requests:", data);
         
-        setRequests(data || []);
-        setPendingRequests((data || []).filter(req => req.status === "pending"));
-        setProcessedRequests((data || []).filter(req => req.status !== "pending"));
+        // Type assertion to ensure the data conforms to our Request interface
+        const typedData = data as Request[] || [];
+        setRequests(typedData);
+        setPendingRequests(typedData.filter(req => req.status === "pending"));
+        setProcessedRequests(typedData.filter(req => req.status !== "pending"));
       } catch (error) {
         console.error("Error fetching requests:", error);
         toast({
@@ -145,7 +147,7 @@ const ApproverDashboard = () => {
   };
 
   const getUrgencyBadge = (urgency: string) => {
-    switch (urgency) {
+    switch (urgency.toLowerCase()) {
       case "low":
         return <Badge className="bg-blue-500">Low Priority</Badge>;
       case "medium":
@@ -153,7 +155,7 @@ const ApproverDashboard = () => {
       case "high":
         return <Badge className="bg-red-500">High Priority</Badge>;
       default:
-        return <Badge>Unknown</Badge>;
+        return <Badge>{urgency} Priority</Badge>;
     }
   };
 
