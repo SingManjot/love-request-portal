@@ -36,7 +36,15 @@ const RequestStatus = () => {
           
         if (error) throw error;
         
-        setRequests(data || []);
+        // Type cast the data to ensure wished_urgency is correctly typed
+        const typedData = data?.map(item => ({
+          ...item,
+          wished_urgency: item.wished_urgency as "low" | "medium" | "high",
+          person: item.person as "dad" | "mom" | "sister" | "her",
+          status: item.status as "pending" | "approved" | "rejected"
+        })) || [];
+        
+        setRequests(typedData);
       } catch (error) {
         console.error("Error fetching requests:", error);
       } finally {
