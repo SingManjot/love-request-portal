@@ -77,21 +77,18 @@ export type Database = {
           code: string
           created_at: string | null
           name: string | null
-          phone: string | null
           type: string
         }
         Insert: {
           code: string
           created_at?: string | null
           name?: string | null
-          phone?: string | null
           type: string
         }
         Update: {
           code?: string
           created_at?: string | null
           name?: string | null
-          phone?: string | null
           type?: string
         }
         Relationships: []

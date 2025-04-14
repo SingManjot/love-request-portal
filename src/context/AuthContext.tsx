@@ -82,8 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           code: newUser.code,
           type: newUser.type as "requester" | "approver",
           name: newUser.name || undefined,
-          created_at: newUser.created_at || undefined,
-          phone: newUser.phone || undefined
+          created_at: newUser.created_at || undefined
         };
         
         setUser(typedUser);
@@ -98,8 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           code: data.code,
           type: data.type as "requester" | "approver",
           name: data.name || undefined,
-          created_at: data.created_at || undefined,
-          phone: data.phone || undefined
+          created_at: data.created_at || undefined
         };
         
         setUser(typedUser);
