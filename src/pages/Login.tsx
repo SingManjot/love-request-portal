@@ -1,0 +1,86 @@
+
+import { useState, FormEvent } from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Heart, Phone } from "lucide-react";
+
+const Login = () => {
+  const [phone, setPhone] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user, login, loading } = useAuth();
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!phone) return;
+    
+    setIsSubmitting(true);
+    try {
+      await login(phone);
+    } catch (error) {
+      console.error("Login error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // If user is already logged in, redirect to the appropriate dashboard
+  if (user && !loading) {
+    if (user.type === "approver") {
+      return <Navigate to="/approve" replace />;
+    } else {
+      return <Navigate to="/dashboard" replace />;
+    }
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen bg-background heart-bg">
+      <div className="container max-w-md mx-auto flex-1 flex flex-col items-center justify-center px-4">
+        <div className="cute-card w-full">
+          <div className="text-center mb-8">
+            <div className="inline-block p-3 mb-4 rounded-full bg-pink-100">
+              <Heart className="w-10 h-10 text-cute-pink" />
+            </div>
+            <h1 className="text-2xl font-bold text-foreground">Love Request Portal</h1>
+            <p className="mt-2 text-muted-foreground">Enter your phone number to continue</p>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="relative">
+              <Phone className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground" />
+              <Input
+                type="tel"
+                placeholder="Phone Number"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="cute-input pl-10"
+                required
+              />
+            </div>
+            
+            <Button 
+              type="submit" 
+              className="w-full cute-button primary-gradient"
+              disabled={isSubmitting || !phone}
+            >
+              {isSubmitting ? "Logging in..." : "Login"}
+            </Button>
+            
+            <div className="text-xs text-center text-muted-foreground mt-4">
+              <p>Demo Instructions:</p>
+              <p>Use any phone number ending with "1" for approver view</p>
+              <p>Use any other phone number for requester view</p>
+            </div>
+          </form>
+        </div>
+        
+        <div className="mt-6 text-center text-muted-foreground">
+          <p className="text-sm">Made with 💖 just for you</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Login;

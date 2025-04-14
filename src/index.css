@@ -1,92 +1,80 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 330 100% 98%;
+    --foreground: 330 10% 20%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 330 10% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 330 10% 20%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 330 80% 70%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 270 80% 70%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 330 20% 90%;
+    --muted-foreground: 330 10% 40%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 210 80% 70%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 330 30% 90%;
+    --input: 330 30% 90%;
+    --ring: 330 80% 70%;
 
-    --radius: 0.5rem;
+    --radius: 1rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 330 30% 10%;
+    --foreground: 330 10% 90%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 330 30% 15%;
+    --card-foreground: 330 10% 90%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 330 30% 15%;
+    --popover-foreground: 330 10% 90%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 330 80% 60%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 270 80% 60%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 330 30% 20%;
+    --muted-foreground: 330 10% 70%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 210 80% 60%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 330 30% 20%;
+    --input: 330 30% 20%;
+    --ring: 330 80% 60%;
   }
 }
 
@@ -96,6 +84,31 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-cute;
+  }
+
+  .cute-card {
+    @apply bg-white rounded-3xl shadow-lg border-2 border-cute-pink p-6 transition-all duration-300;
+  }
+  
+  .cute-button {
+    @apply px-6 py-3 rounded-full font-medium text-white shadow-md transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-opacity-50;
+  }
+  
+  .primary-gradient {
+    @apply bg-gradient-to-r from-cute-pink to-cute-purple;
+  }
+  
+  .cute-input {
+    @apply px-4 py-3 rounded-full border-2 border-muted focus:border-cute-pink bg-white/80 focus:outline-none focus:ring-2 focus:ring-cute-pink focus:ring-opacity-30 transition-all duration-300;
+  }
+  
+  .floating-element {
+    @apply animate-float;
+  }
+  
+  .heart-bg {
+    background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 17.5C9.71667 17.5 9.43333 17.4167 9.2 17.25C8.96667 17.0833 8.73333 16.9167 8.5 16.75C6.15 14.9 4.35833 13.2583 3.125 11.825C1.89167 10.3917 1.27499 9.02499 1.27499 7.72499C1.27499 6.69166 1.64999 5.82499 2.4 5.12499C3.15 4.42499 4.06666 4.07499 5.15 4.07499C5.88333 4.07499 6.56666 4.24999 7.2 4.59999C7.83333 4.94999 8.36667 5.42499 8.8 6.02499C9.03333 6.29166 9.21667 6.58333 9.35 6.9C9.48333 7.21666 9.56667 7.49999 9.6 7.74999H10.4C10.4333 7.49999 10.5167 7.21666 10.65 6.9C10.7833 6.58333 10.9667 6.29166 11.2 6.02499C11.6333 5.42499 12.1667 4.94999 12.8 4.59999C13.4333 4.24999 14.1167 4.07499 14.85 4.07499C15.9333 4.07499 16.85 4.42499 17.6 5.12499C18.35 5.82499 18.725 6.69166 18.725 7.72499C18.725 9.02499 18.1083 10.3917 16.875 11.825C15.6417 13.2583 13.85 14.9 11.5 16.75C11.2667 16.9167 11.0333 17.0833 10.8 17.25C10.5667 17.4167 10.2833 17.5 10 17.5Z' fill='%23FFA6C9' fill-opacity='0.2'/%3E%3C/svg%3E");
+    background-size: 60px;
   }
 }
