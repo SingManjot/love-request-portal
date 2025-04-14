@@ -16,42 +16,51 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/components/ui/use-toast";
 
 const RequestStatus = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  const fetchRequests = async () => {
+    if (!user) return;
+    
+    try {
+      console.log("Fetching requests for phone:", user.phone);
+      const { data, error } = await supabase
+        .from("requests")
+        .select("*")
+        .eq("phone", user.phone)
+        .order("created_at", { ascending: false });
+        
+      if (error) throw error;
+      
+      // Type cast the data to ensure wished_urgency is correctly typed
+      const typedData = data?.map(item => ({
+        ...item,
+        wished_urgency: item.wished_urgency as "low" | "medium" | "high",
+        person: item.person as "dad" | "mom" | "sister" | "her",
+        status: item.status as "pending" | "approved" | "rejected"
+      })) || [];
+      
+      console.log("Fetched requests:", typedData);
+      setRequests(typedData);
+    } catch (error) {
+      console.error("Error fetching requests:", error);
+      toast({
+        title: "Error fetching requests",
+        description: "Could not retrieve your requests. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchRequests = async () => {
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from("requests")
-          .select("*")
-          .eq("phone", user.phone)
-          .order("created_at", { ascending: false });
-          
-        if (error) throw error;
-        
-        // Type cast the data to ensure wished_urgency is correctly typed
-        const typedData = data?.map(item => ({
-          ...item,
-          wished_urgency: item.wished_urgency as "low" | "medium" | "high",
-          person: item.person as "dad" | "mom" | "sister" | "her",
-          status: item.status as "pending" | "approved" | "rejected"
-        })) || [];
-        
-        setRequests(typedData);
-      } catch (error) {
-        console.error("Error fetching requests:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
     fetchRequests();
     
     // Set up real-time subscription
@@ -63,7 +72,7 @@ const RequestStatus = () => {
           event: "*",
           schema: "public",
           table: "requests",
-          filter: `phone=eq.${user?.phone}`,
+          filter: `phone=eq.${user?.phone || ''}`,
         },
         (payload) => {
           console.log("Real-time update received:", payload);
@@ -72,7 +81,11 @@ const RequestStatus = () => {
       )
       .subscribe();
       
+    // Log subscription status
+    console.log("Subscription created:", subscription);
+      
     return () => {
+      console.log("Cleaning up subscription");
       subscription.unsubscribe();
     };
   }, [user]);

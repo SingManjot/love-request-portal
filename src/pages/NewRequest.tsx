@@ -1,4 +1,3 @@
-
 import { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -42,11 +41,21 @@ const NewRequest = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Authentication error",
+        description: "You must be logged in to submit a request.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsSubmitting(true);
     
     try {
+      console.log("Submitting request with phone:", user.phone);
+      console.log("Form data:", formData);
+      
       const { data, error } = await supabase
         .from("requests")
         .insert({
@@ -56,6 +65,8 @@ const NewRequest = () => {
         .select();
         
       if (error) throw error;
+      
+      console.log("Request submitted successfully:", data);
       
       toast({
         title: "Request submitted!",
