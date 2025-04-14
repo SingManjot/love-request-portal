@@ -1,4 +1,3 @@
-
 import { useEffect, useState, FormEvent } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -45,7 +44,6 @@ const ApproverDashboard = () => {
         
         console.log("Fetched requests:", data);
         
-        // Type assertion to ensure the data conforms to our Request interface
         const typedData = data as Request[] || [];
         setRequests(typedData);
         setPendingRequests(typedData.filter(req => req.status === "pending"));
@@ -60,7 +58,6 @@ const ApproverDashboard = () => {
     
     fetchRequests();
     
-    // Set up real-time subscription
     const subscription = supabase
       .channel("approver-requests-changes")
       .on(
@@ -102,10 +99,9 @@ const ApproverDashboard = () => {
         
       if (error) throw error;
       
-      // Show cute animation based on status
       if (status === "approved") {
-        toast.custom((t) => (
-          <div className={`bg-white p-4 rounded-lg shadow-lg border-2 border-cute-pink transform transition-all duration-500 ${t.visible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}>
+        toast.custom(() => (
+          <div className="bg-white p-4 rounded-lg shadow-lg border-2 border-cute-pink transform transition-all duration-500">
             <div className="flex items-center gap-3">
               <div className="bg-gradient-to-r from-cute-pink to-cute-purple p-3 rounded-full">
                 <Heart className="w-6 h-6 text-white animate-pulse-gentle" fill="#FFF" />
@@ -118,8 +114,8 @@ const ApproverDashboard = () => {
           </div>
         ), { duration: 4000 });
       } else {
-        toast.custom((t) => (
-          <div className={`bg-white p-4 rounded-lg shadow-lg border-2 border-muted transform transition-all duration-500 ${t.visible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}>
+        toast.custom(() => (
+          <div className="bg-white p-4 rounded-lg shadow-lg border-2 border-muted transform transition-all duration-500">
             <div className="flex items-center gap-3">
               <div className="bg-gray-200 p-3 rounded-full">
                 <HeartCrack className="w-6 h-6 text-red-500 animate-pulse-gentle" />
@@ -133,35 +129,22 @@ const ApproverDashboard = () => {
         ), { duration: 4000 });
       }
       
-      // Clear the reason input
-      setReasonInputs(prev => {
-        const newInputs = { ...prev };
-        delete newInputs[id];
-        return newInputs;
-      });
-
-      // Update local state immediately to reflect the change
-      // Find the request that was just processed
       const updatedRequest = requests.find(req => req.id === id);
       if (updatedRequest) {
-        // Create an updated version of the request with the new status
         const processedRequest = {
           ...updatedRequest,
           status,
           response_reason: reason
         };
-
-        // Update all three state variables
+        
         setRequests(prev => 
           prev.map(req => req.id === id ? processedRequest : req)
         );
         
-        // Remove from pending requests
         setPendingRequests(prev => 
           prev.filter(req => req.id !== id)
         );
         
-        // Add to processed requests
         setProcessedRequests(prev => 
           [processedRequest, ...prev]
         );
