@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -36,17 +35,28 @@ const RequestStatus = () => {
         .eq("phone", user.phone)
         .order("created_at", { ascending: false });
         
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
+      
+      if (!data) {
+        console.log("No data returned from query");
+        setRequests([]);
+        return;
+      }
+      
+      console.log("Raw data from Supabase:", data);
       
       // Type cast the data to ensure wished_urgency is correctly typed
-      const typedData = data?.map(item => ({
+      const typedData = data.map(item => ({
         ...item,
         wished_urgency: item.wished_urgency as "low" | "medium" | "high",
         person: item.person as "dad" | "mom" | "sister" | "her",
         status: item.status as "pending" | "approved" | "rejected"
-      })) || [];
+      }));
       
-      console.log("Fetched requests:", typedData);
+      console.log("Processed requests:", typedData);
       setRequests(typedData);
     } catch (error) {
       console.error("Error fetching requests:", error);
@@ -55,39 +65,43 @@ const RequestStatus = () => {
         description: "Could not retrieve your requests. Please try again.",
         variant: "destructive",
       });
+      setRequests([]);
     } finally {
       setLoading(false);
     }
   };
-
+  
   useEffect(() => {
-    fetchRequests();
+    console.log("RequestStatus component mounted, user:", user);
     
-    // Set up real-time subscription
-    const subscription = supabase
-      .channel("requests-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "requests",
-          filter: `phone=eq.${user?.phone || ''}`,
-        },
-        (payload) => {
-          console.log("Real-time update received:", payload);
-          fetchRequests();
-        }
-      )
-      .subscribe();
+    if (user) {
+      fetchRequests();
       
-    // Log subscription status
-    console.log("Subscription created:", subscription);
-      
-    return () => {
-      console.log("Cleaning up subscription");
-      subscription.unsubscribe();
-    };
+      // Set up real-time subscription
+      const subscription = supabase
+        .channel("requests-changes")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "requests",
+            filter: `phone=eq.${user.phone}`,
+          },
+          (payload) => {
+            console.log("Real-time update received:", payload);
+            fetchRequests();
+          }
+        )
+        .subscribe();
+        
+      console.log("Subscription created:", subscription);
+        
+      return () => {
+        console.log("Cleaning up subscription");
+        subscription.unsubscribe();
+      };
+    }
   }, [user]);
 
   const getStatusBadge = (status: string) => {
@@ -127,22 +141,37 @@ const RequestStatus = () => {
     }
   };
 
+  const handleRefresh = () => {
+    setLoading(true);
+    fetchRequests();
+  };
+
   return (
     <div className="min-h-screen bg-background heart-bg">
       <div className="container max-w-md mx-auto py-8 px-4">
-        <div className="flex items-center mb-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate("/dashboard")}
+              className="mr-2"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <h1 className="text-xl font-bold flex items-center">
+              <Heart className="w-5 h-5 text-cute-pink mr-2" />
+              Request Status
+            </h1>
+          </div>
           <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => navigate("/dashboard")}
-            className="mr-2"
+            variant="outline" 
+            size="sm" 
+            onClick={handleRefresh}
+            disabled={loading}
           >
-            <ArrowLeft className="w-5 h-5" />
+            Refresh
           </Button>
-          <h1 className="text-xl font-bold flex items-center">
-            <Heart className="w-5 h-5 text-cute-pink mr-2" />
-            Request Status
-          </h1>
         </div>
         
         {loading ? (

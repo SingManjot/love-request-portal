@@ -1,3 +1,4 @@
+
 import { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -56,15 +57,22 @@ const NewRequest = () => {
       console.log("Submitting request with phone:", user.phone);
       console.log("Form data:", formData);
       
+      const requestData = {
+        ...formData,
+        phone: user.phone,
+      };
+      
+      console.log("Final request data being sent:", requestData);
+      
       const { data, error } = await supabase
         .from("requests")
-        .insert({
-          ...formData,
-          phone: user.phone,
-        })
+        .insert(requestData)
         .select();
         
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
       
       console.log("Request submitted successfully:", data);
       
@@ -73,7 +81,10 @@ const NewRequest = () => {
         description: "Your request has been sent successfully.",
       });
       
-      navigate("/request-status");
+      // Introduce a small delay before navigation to ensure Supabase has time to process
+      setTimeout(() => {
+        navigate("/request-status");
+      }, 500);
     } catch (error) {
       console.error("Error submitting request:", error);
       toast({
