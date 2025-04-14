@@ -25,11 +25,10 @@ const NewRequest = () => {
     wished_date: "",
     wished_urgency: "medium" as "low" | "medium" | "high",
     reason: "",
-    person: "her" 
+    person: "Smrthi" 
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Set default date to today when component mounts
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
     setFormData(prev => ({
@@ -90,7 +89,6 @@ const NewRequest = () => {
         description: "Your request has been sent successfully.",
       });
       
-      // Navigate after a longer delay to ensure Supabase has time to process
       setTimeout(() => {
         console.log("Navigating to request-status page");
         toast({
@@ -98,7 +96,7 @@ const NewRequest = () => {
           description: "Taking you to your request status page.",
         });
         navigate("/request-status");
-      }, 3000); // Extended to 3 seconds
+      }, 3000);
     } catch (error) {
       console.error("Error submitting request:", error);
       toast({
@@ -193,7 +191,7 @@ const NewRequest = () => {
                   <SelectValue placeholder="Select person" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="her">her</SelectItem>
+                  <SelectItem value="Smrthi">Smrthi</SelectItem>
                 </SelectContent>
               </Select>
             </div>
