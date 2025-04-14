@@ -13,7 +13,8 @@ import {
   XCircle,
   Calendar,
   Heart,
-  RefreshCw
+  RefreshCw,
+  Database
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,6 +27,7 @@ const RequestStatus = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [debug, setDebug] = useState<any>(null);
 
   const fetchRequests = async () => {
     if (!user) {
@@ -37,48 +39,60 @@ const RequestStatus = () => {
     setLoading(true);
     
     try {
+      console.log("Current user:", user);
       console.log("Fetching requests for phone:", user.phone);
       
-      // Fetch ALL requests to debug
+      // Debug: Fetch ALL requests to understand what's in the database
       const allRequestsResult = await supabase
         .from("requests")
         .select("*");
         
       console.log("All requests in database:", allRequestsResult);
+      setDebug(allRequestsResult);
       
-      // Now fetch user-specific requests
-      const { data, error } = await supabase
-        .from("requests")
-        .select("*")
-        .eq("phone", user.phone);
+      if (allRequestsResult.error) {
+        console.error("Error fetching all requests:", allRequestsResult.error);
+        toast({
+          title: "Database error",
+          description: "Could not access the requests database. Please try again.",
+          variant: "destructive",
+        });
+      } else {
+        console.log(`Found ${allRequestsResult.data?.length || 0} total requests in database`);
+      }
+      
+      // Now fetch user-specific requests if the user has a phone number
+      if (user.phone) {
+        const { data, error } = await supabase
+          .from("requests")
+          .select("*")
+          .eq("phone", user.phone);
+          
+        if (error) {
+          console.error("Supabase error:", error);
+          throw error;
+        }
         
-      if (error) {
-        console.error("Supabase error:", error);
-        throw error;
+        console.log("User-specific requests from Supabase:", data);
+        console.log("Number of user requests found:", data?.length || 0);
+        
+        // Type cast the data to ensure wished_urgency, person, and status are correctly typed
+        const typedData = (data || []).map(item => ({
+          ...item,
+          wished_urgency: item.wished_urgency as "low" | "medium" | "high",
+          person: item.person as "dad" | "mom" | "sister" | "her",
+          status: item.status as "pending" | "approved" | "rejected"
+        }));
+        
+        setRequests(typedData);
+      } else {
+        console.log("User has no phone number set in profile", user);
+        toast({
+          title: "Profile incomplete",
+          description: "Your phone number is not set up. Please update your profile.",
+          variant: "destructive",
+        });
       }
-      
-      console.log("Raw data from Supabase for this user:", data);
-      console.log("User phone used for query:", user.phone);
-      
-      if (!data || data.length === 0) {
-        console.log("No requests found for this user");
-        setRequests([]);
-        setLoading(false);
-        return;
-      }
-      
-      // Type cast the data to ensure wished_urgency, person, and status are correctly typed
-      const typedData = data.map(item => ({
-        ...item,
-        wished_urgency: item.wished_urgency as "low" | "medium" | "high",
-        person: item.person as "dad" | "mom" | "sister" | "her",
-        status: item.status as "pending" | "approved" | "rejected"
-      }));
-      
-      console.log("Processed requests:", typedData);
-      console.log("Number of requests found:", typedData.length);
-      
-      setRequests(typedData);
     } catch (error) {
       console.error("Error fetching requests:", error);
       toast({
@@ -166,6 +180,63 @@ const RequestStatus = () => {
     setRefreshTrigger(prev => prev + 1);
   };
 
+  // Function to manually insert a test request for debugging
+  const createTestRequest = async () => {
+    if (!user || !user.phone) {
+      toast({
+        title: "Error",
+        description: "You must be logged in with a phone number to create a test request.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      
+      const testData = {
+        name: "Test User",
+        phone: user.phone,
+        wished_date: new Date().toISOString().split('T')[0],
+        wished_urgency: "medium" as "low" | "medium" | "high",
+        reason: "This is a test request",
+        person: "her" as "dad" | "mom" | "sister" | "her",
+        status: "pending" as "pending" | "approved" | "rejected"
+      };
+      
+      console.log("Creating test request with data:", testData);
+      
+      const { data, error } = await supabase
+        .from("requests")
+        .insert(testData)
+        .select();
+        
+      if (error) {
+        console.error("Error creating test request:", error);
+        throw error;
+      }
+      
+      console.log("Test request created successfully:", data);
+      
+      toast({
+        title: "Test request created",
+        description: "A test request has been created. It should appear in the list.",
+      });
+      
+      // Refresh the list
+      fetchRequests();
+    } catch (error) {
+      console.error("Error creating test request:", error);
+      toast({
+        title: "Error creating test request",
+        description: "Could not create the test request. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background heart-bg">
       <div className="container max-w-md mx-auto py-8 px-4">
@@ -194,6 +265,32 @@ const RequestStatus = () => {
             Refresh
           </Button>
         </div>
+        
+        {/* Add Debug Test Button */}
+        <div className="mb-4">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={createTestRequest}
+            disabled={loading}
+            className="w-full"
+          >
+            <Database className="w-4 h-4 mr-2" />
+            Create Test Request
+          </Button>
+        </div>
+        
+        {/* Debug Info */}
+        {debug && (
+          <Card className="p-4 mb-4 bg-slate-50 text-xs overflow-auto max-h-40">
+            <h3 className="font-bold mb-1">Debug Info</h3>
+            <p>Total requests in DB: {debug.data?.length || 0}</p>
+            <p>User phone: {user?.phone || "Not set"}</p>
+            <p>First request in DB (if any): {debug.data && debug.data.length > 0 ? 
+              `Name: ${debug.data[0].name}, Phone: ${debug.data[0].phone}` : 
+              "No requests found"}</p>
+          </Card>
+        )}
         
         {loading ? (
           <div className="space-y-4">
