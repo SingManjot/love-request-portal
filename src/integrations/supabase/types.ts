@@ -39,7 +39,6 @@ export type Database = {
           id: string
           name: string
           person: string
-          phone: string | null
           reason: string
           response_reason: string | null
           status: string
@@ -51,7 +50,6 @@ export type Database = {
           id?: string
           name: string
           person: string
-          phone?: string | null
           reason: string
           response_reason?: string | null
           status?: string
@@ -63,7 +61,6 @@ export type Database = {
           id?: string
           name?: string
           person?: string
-          phone?: string | null
           reason?: string
           response_reason?: string | null
           status?: string

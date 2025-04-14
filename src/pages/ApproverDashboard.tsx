@@ -1,7 +1,6 @@
-
 import { useEffect, useState, FormEvent } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { Request } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -32,12 +31,18 @@ const ApproverDashboard = () => {
   useEffect(() => {
     const fetchRequests = async () => {
       try {
+        console.log("Fetching requests for approver dashboard...");
         const { data, error } = await supabase
           .from("requests")
           .select("*")
           .order("created_at", { ascending: false });
           
-        if (error) throw error;
+        if (error) {
+          console.error("Error fetching requests:", error);
+          throw error;
+        }
+        
+        console.log("Fetched requests:", data);
         
         setRequests(data || []);
         setPendingRequests((data || []).filter(req => req.status === "pending"));

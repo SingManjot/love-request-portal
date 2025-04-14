@@ -34,9 +34,6 @@ const RequestStatus = () => {
     
     try {
       console.log("Current user:", user);
-      if (user) {
-        console.log("User phone:", user.phone || "Not set");
-      }
       
       // Always fetch ALL requests for debugging
       const allRequestsResult = await supabase
@@ -154,7 +151,6 @@ const RequestStatus = () => {
     setRefreshTrigger(prev => prev + 1);
   };
 
-  // Function to manually insert a test request for debugging
   const createTestRequest = async () => {
     try {
       setLoading(true);
@@ -187,7 +183,6 @@ const RequestStatus = () => {
         description: "A test request has been created. It should appear in the list.",
       });
       
-      // Refresh the list
       fetchRequests();
     } catch (error) {
       console.error("Error creating test request:", error);
@@ -201,7 +196,6 @@ const RequestStatus = () => {
     }
   };
 
-  // Toggle to show all requests or only user's requests
   const toggleShowAll = () => {
     setShowAllRequests(prev => !prev);
     setTimeout(() => {
@@ -238,7 +232,6 @@ const RequestStatus = () => {
           </Button>
         </div>
         
-        {/* Debug Tools */}
         <div className="space-y-2 mb-4">
           <Button
             variant="secondary"
@@ -262,15 +255,14 @@ const RequestStatus = () => {
           </Button>
         </div>
         
-        {/* Debug Info */}
         {debug && (
           <Card className="p-4 mb-4 bg-slate-50 text-xs overflow-auto max-h-40">
             <h3 className="font-bold mb-1">Debug Info</h3>
             <p>Total requests in DB: {debug.data?.length || 0}</p>
-            <p>User phone: {user?.phone || "Not set"}</p>
+            <p>User: {user?.name || user?.code || "Not set"}</p>
             <p>Show all mode: {showAllRequests ? "ON" : "OFF"}</p>
             <p>First request in DB (if any): {debug.data && debug.data.length > 0 ? 
-              `Name: ${debug.data[0].name}, Phone: ${debug.data[0].phone}` : 
+              `Name: ${debug.data[0].name}` : 
               "No requests found"}</p>
           </Card>
         )}
