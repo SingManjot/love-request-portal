@@ -6,9 +6,9 @@ import { Request } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
 import { 
   Heart, 
   Calendar, 
@@ -16,11 +16,11 @@ import {
   XCircle, 
   Clock,
   LogOut,
+  HeartCrack,
 } from "lucide-react";
 
 const ApproverDashboard = () => {
   const { user, logout } = useAuth();
-  const { toast } = useToast();
   const [requests, setRequests] = useState<Request[]>([]);
   const [pendingRequests, setPendingRequests] = useState<Request[]>([]);
   const [processedRequests, setProcessedRequests] = useState<Request[]>([]);
@@ -52,11 +52,7 @@ const ApproverDashboard = () => {
         setProcessedRequests(typedData.filter(req => req.status !== "pending"));
       } catch (error) {
         console.error("Error fetching requests:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load requests. Please try again.",
-          variant: "destructive",
-        });
+        toast.error("Failed to load requests. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -84,7 +80,7 @@ const ApproverDashboard = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [toast]);
+  }, []);
 
   const handleReasonChange = (id: string, value: string) => {
     setReasonInputs(prev => ({ ...prev, [id]: value }));
@@ -106,10 +102,36 @@ const ApproverDashboard = () => {
         
       if (error) throw error;
       
-      toast({
-        title: `Request ${status === "approved" ? "Approved" : "Rejected"}`,
-        description: `You have ${status === "approved" ? "approved" : "rejected"} the request.`,
-      });
+      // Show cute animation based on status
+      if (status === "approved") {
+        toast.custom((t) => (
+          <div className={`bg-white p-4 rounded-lg shadow-lg border-2 border-cute-pink transform transition-all duration-500 ${t.visible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}>
+            <div className="flex items-center gap-3">
+              <div className="bg-gradient-to-r from-cute-pink to-cute-purple p-3 rounded-full">
+                <Heart className="w-6 h-6 text-white animate-pulse-gentle" fill="#FFF" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-800">Request Approved!</h3>
+                <p className="text-sm text-gray-600">Love is in the air! 💖</p>
+              </div>
+            </div>
+          </div>
+        ), { duration: 4000 });
+      } else {
+        toast.custom((t) => (
+          <div className={`bg-white p-4 rounded-lg shadow-lg border-2 border-muted transform transition-all duration-500 ${t.visible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}>
+            <div className="flex items-center gap-3">
+              <div className="bg-gray-200 p-3 rounded-full">
+                <HeartCrack className="w-6 h-6 text-red-500 animate-pulse-gentle" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-800">Request Declined</h3>
+                <p className="text-sm text-gray-600">Maybe next time...</p>
+              </div>
+            </div>
+          </div>
+        ), { duration: 4000 });
+      }
       
       // Clear the reason input
       setReasonInputs(prev => {
@@ -147,11 +169,7 @@ const ApproverDashboard = () => {
       
     } catch (error) {
       console.error(`Error ${status} request:`, error);
-      toast({
-        title: "Update Failed",
-        description: `Failed to ${status} the request. Please try again.`,
-        variant: "destructive",
-      });
+      toast.error(`Failed to ${status} the request. Please try again.`);
     } finally {
       setProcessingIds(prev => prev.filter(item => item !== id));
     }
