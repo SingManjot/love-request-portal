@@ -1,12 +1,13 @@
+
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { User } from "../lib/database.types";
 import { useToast } from "@/components/ui/use-toast";
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (phone: string) => Promise<void>;
+  login: (code: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -36,15 +37,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkUser();
   }, []);
 
-  const login = async (phone: string) => {
+  const login = async (code: string) => {
     try {
       setLoading(true);
       
-      // Check if user exists in the database
+      // Determine user type based on the code
+      let userType: "requester" | "approver";
+      
+      // Check if the code matches one of our predefined codes
+      if (code.toLowerCase() === "manjot") {
+        userType = "requester";
+      } else if (code.toLowerCase() === "monkeyman") {
+        userType = "approver";
+      } else {
+        throw new Error("Invalid code");
+      }
+
+      // Check if user exists in the database with this code
       const { data, error } = await supabase
         .from("users")
         .select("*")
-        .eq("phone", phone)
+        .eq("code", code.toLowerCase())
         .single();
 
       if (error && error.code !== "PGRST116") {
@@ -52,16 +65,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (!data) {
-        // This is the first login, determine user type based on phone number
-        // For this demo, we'll use a simple rule:
-        // If the phone number ends with "1", it's an approver, otherwise a requester
-        const userType: "requester" | "approver" = phone.endsWith("1") ? "approver" : "requester";
-        
-        // Create new user
+        // Create new user with this code
         const { data: newUser, error: createError } = await supabase
           .from("users")
           .insert({
-            phone,
+            code: code.toLowerCase(),
             type: userType,
             created_at: new Date().toISOString()
           })
@@ -74,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem("user", JSON.stringify(newUser));
         toast({
           title: "Welcome!",
-          description: `You've been registered as a ${userType}.`,
+          description: userType === "requester" ? "You can now create requests." : "You can now review requests.",
         });
       } else {
         // Existing user
@@ -87,9 +95,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error("Login error:", error);
+      let errorMessage = "There was an issue logging in. Please try again.";
+      
+      if (error instanceof Error && error.message === "Invalid code") {
+        errorMessage = "Invalid code. Please try again with a valid code.";
+      }
+      
       toast({
         title: "Login failed",
-        description: "There was an issue logging in. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

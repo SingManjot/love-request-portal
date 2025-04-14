@@ -30,8 +30,9 @@ export interface Request {
 }
 
 export interface User {
-  phone: string;
+  code: string;
   type: "requester" | "approver";
   name?: string;
   created_at?: string;
+  phone?: string;
 }
